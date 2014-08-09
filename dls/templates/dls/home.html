@@ -1,0 +1,105 @@
+<!DOCTYPE html>
+<html>
+  <head>
+	<title>Digital Logistic</title>
+    <meta name="viewport" content="initial-scale=1.0, user-scalable=no" />
+	<link href='http://fonts.googleapis.com/css?family=Roboto' rel='stylesheet' type='text/css'>
+	
+    <style type="text/css">
+      html { font-family:Roboto;height: 100% }
+      body { font-family:Roboto;height: 100%; margin: 0; padding: 0 }
+      #map-canvas { height: 100% }
+	  #search-bar{  
+		  background-color:#FFF;
+		  padding:8px;
+		  margin:16px;
+	  }
+	  #search-bar input {
+		  font-family:Roboto;
+		  border:0px solid transparent;
+		  outline:none;
+		  font-size:16px;
+		  font-weight:300;
+	  }
+	  .info{
+		  width:240px;
+	  }
+	  .info-header{
+		  font-size:24px;
+		  font-weight:400;
+		  border-bottom:1px solid rgba(0,0,0,.24);
+		  padding:8px;
+		  color:rgba(0,0,0,.54);
+	  }
+	  .info-block{
+		  display:inline-block;
+		  font-size:46px;
+		  font-weight:thin;
+		  padding-top:16px;
+		  width:120px;
+		  text-align:center;
+	  }
+	  .info-unit{
+	  	 font-size:12px;
+		 color:rgba(0,0,0,.54);
+		 width:120px;
+		 text-align:center;
+	  }
+    </style>
+    <script type="text/javascript"
+      src="https://maps.googleapis.com/maps/api/js?key=AIzaSyAtAqOHaEs-G29SKSrqRa0wqJIOrXTHngA">
+    </script>
+	<script src="//ajax.googleapis.com/ajax/libs/jquery/1.11.1/jquery.min.js"></script>
+    <script type="text/javascript">
+		markers = [];
+		function updateCrumb(data){
+			for(var i = 0 ; i < data.length ; i++){
+				if(markers[data[i].imei]){
+					marker = markers[data[i].imei];
+					marker.setPosition(new google.maps.LatLng(data[i].crumb.lat,data[i].crumb.lng));
+				} else {
+					marker = new google.maps.Marker({
+					    position: new google.maps.LatLng(data[i].crumb.lat,data[i].crumb.lng),
+					    title:data[i].name
+					});
+					markers[data[i].imei] = marker;
+					marker.setMap(map);
+					marker.info = new google.maps.InfoWindow({content:'hello'});
+					google.maps.event.addListener(marker, 'click', function() {
+					    marker.info.open(map,marker);
+					});
+				}
+				//info  
+				var content = $('<div/>').addClass('info').append($('<div/>').addClass('info-header').text(data[i].name));
+				content.append($('<div/>').addClass('info-block').append($('<div/>').text(data[i].crumb.spd.toFixed(1))).append($('<div/>').addClass('info-unit').text('km/h')));
+				content.append($('<div/>').addClass('info-block').append($('<div/>').text(data[i].crumb.vec.toFixed(1))).append($('<div/>').addClass('info-unit').text('degree')));
+				marker.info.setContent(content[0]);
+				console.log(content[0]);
+			}
+		} 
+		function initialize() {
+	        var mapOptions = {
+	          center: new google.maps.LatLng(15.221511,104.817722),
+	          zoom: 12,
+			  disableDefaultUI:true
+	        };
+	        map = new google.maps.Map(document.getElementById("map-canvas"),
+	            mapOptions);
+		
+			var search = document.getElementById('search-bar');
+			map.controls[google.maps.ControlPosition.TOP_LEFT].push(search);
+			$.getJSON('/orbit/latest',updateCrumb);
+			//setInterval(function(){$.getJSON('/orbit/latest',updateCrumb);},10000);
+	    }
+	  
+      google.maps.event.addDomListener(window, 'load', initialize);
+    </script>
+  </head>
+  <body>
+	<div id="search-bar">
+		<input type='text' placeholder='Search...'/>
+	</div>
+	<div id="map-canvas"/>
+	
+  </body>
+</html>
