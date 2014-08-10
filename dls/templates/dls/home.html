@@ -63,8 +63,7 @@
 		function updateInfo(){
 			//Info Header
 			var name = $('<div/>').addClass('info-name').text(this.data.name);
-			var imei = $('<div/>').addClass('info-imei').text('imei:'+this.data.imei);
-			var header = $('<div/>').addClass('info').append(name).append(imei);
+			var header = $('<div/>').addClass('info').append(name);
 			
 			var lat = infoblock('latitude',this.data.crumb.lat.toFixed(3),'deg');
 			var lng = infoblock('longitude',this.data.crumb.lng.toFixed(3),'deg');
