@@ -22,28 +22,35 @@
 		  font-weight:300;
 	  }
 	  .info{
-		  width:240px;
-	  }
-	  .info-header{
-		  font-size:24px;
-		  font-weight:400;
-		  border-bottom:1px solid rgba(0,0,0,.24);
+		  width:360px;
+		  background-color:#259B24;
 		  padding:8px;
-		  color:rgba(0,0,0,.54);
+	  }
+	  .info-name{
+		  font-size:24px;
+		  color:#FFF;
+	  }
+	  .info-imei{
+		  font-size:12px;
+		  font-weight:thin;
+		  color:rgba(255,255,255,0.74);
 	  }
 	  .info-block{
 		  display:inline-block;
-		  font-size:46px;
-		  font-weight:thin;
-		  padding-top:16px;
-		  width:120px;
-		  text-align:center;
+		  width:180px;
 	  }
-	  .info-unit{
-	  	 font-size:12px;
-		 color:rgba(0,0,0,.54);
-		 width:120px;
-		 text-align:center;
+	  .info-block-label{
+		  padding-top:4px;
+	  }
+	  .info-block-info{
+		  font-size:36px;
+		  width:100%;
+	  }
+	  .info-block-unit{
+		  display:inline;
+		  font-size:16px;
+		  padding-left:4px;
+		  font-weight:bold;
 	  }
     </style>
     <script type="text/javascript"
@@ -52,31 +59,57 @@
 	<script src="//ajax.googleapis.com/ajax/libs/jquery/1.11.1/jquery.min.js"></script>
     <script type="text/javascript">
 		markers = [];
+		
+		function updateInfo(){
+			//Info Header
+			var name = $('<div/>').addClass('info-name').text(this.data.name);
+			var imei = $('<div/>').addClass('info-imei').text('imei:'+this.data.imei);
+			var header = $('<div/>').addClass('info').append(name).append(imei);
+			
+			var lat = infoblock('latitude',this.data.crumb.lat.toFixed(3),'deg');
+			var lng = infoblock('longitude',this.data.crumb.lng.toFixed(3),'deg');
+			var spd = infoblock('speed',this.data.crumb.spd.toFixed(1),'km/h');
+			var vec = infoblock('vector',this.data.crumb.vec.toFixed(1),'deg');
+			var container = $('<div/>').append(header).append(lat).append(lng).append(spd).append(vec);
+			
+			this.info.setContent(container[0]);
+		}
+		
+		function infoblock(label,info,unit){
+			var label = $('<div/>').addClass('info-block-label').text(label);
+			var info = $('<div/>').addClass('info-block-info').text(info);
+			var unit = $('<div/>').addClass('info-block-unit').text(unit);
+			info.append(unit);
+			return $('<span/>').addClass('info-block').append(label).append(info);
+			
+		}
 		function updateCrumb(data){
+
 			for(var i = 0 ; i < data.length ; i++){
-				if(markers[data[i].imei]){
-					marker = markers[data[i].imei];
+				var marker = markers[data[i].imei];
+				if(marker){
+					marker.data = data[i];
 					marker.setPosition(new google.maps.LatLng(data[i].crumb.lat,data[i].crumb.lng));
+					marker.updateInfo();
 				} else {
 					marker = new google.maps.Marker({
 					    position: new google.maps.LatLng(data[i].crumb.lat,data[i].crumb.lng),
 					    title:data[i].name
 					});
+					marker.info = new google.maps.InfoWindow({maxWidth:375});
+					marker.data = data[i];
+					marker.updateInfo = updateInfo;
+					marker.updateInfo();
 					markers[data[i].imei] = marker;
 					marker.setMap(map);
-					marker.info = new google.maps.InfoWindow({content:'hello'});
-					google.maps.event.addListener(marker, 'click', function() {
-					    marker.info.open(map,marker);
+					google.maps.event.addListener(marker,'click',function(){
+						this.info.open(map,this);
 					});
+					
 				}
-				//info  
-				var content = $('<div/>').addClass('info').append($('<div/>').addClass('info-header').text(data[i].name));
-				content.append($('<div/>').addClass('info-block').append($('<div/>').text(data[i].crumb.spd.toFixed(1))).append($('<div/>').addClass('info-unit').text('km/h')));
-				content.append($('<div/>').addClass('info-block').append($('<div/>').text(data[i].crumb.vec.toFixed(1))).append($('<div/>').addClass('info-unit').text('degree')));
-				marker.info.setContent(content[0]);
-				console.log(content[0]);
 			}
 		} 
+		
 		function initialize() {
 	        var mapOptions = {
 	          center: new google.maps.LatLng(15.221511,104.817722),
